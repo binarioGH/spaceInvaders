@@ -4,6 +4,8 @@
 #include <list>
 using namespace std;
 
+void win_animation(void);
+void death_animation(void);
 void draw_line(void);
 void gotoxy(int x, int y);
 void hideCursor(void);
@@ -194,16 +196,19 @@ int main(){
 	list<Alien*>::iterator ait;
 	int i = 0;
 	int y = 4;
+	int c = 0;
 	for(i=16;i<80;i+=16){
 		aliens.push_back(new Alien(i,y,1));
 		y += 1;
+		c++;//c++, haha
 	}
 	walls.push_back(new Wall(20, 19));
 	walls.push_back(new Wall(40, 19));
 	walls.push_back(new Wall(60, 19));
 	bool witdone = false;
 	int score = 0;
-	while(ms.alive){
+	int totalScore = 50 * c;
+	while(ms.alive && score != totalScore){
 		ms.keyMove();
 		if(ms.shooting){
 			bullets.push_back(new Bullet(ms.x, ms.y-1, -1,0,0));
@@ -255,9 +260,31 @@ int main(){
 				bit = bullets.erase(bit);
 			}
 		}
+
 		gotoxy(0,1);printf("Score: %i   ", score);
 		Sleep(100);
 	}
+	for(bit=bullets.begin();bit!=bullets.end();bit++){
+		delete(*bit);
+		bit = bullets.erase(bit);
+	}
+	for(wit=walls.begin();wit!=walls.end();wit++){
+		delete(*wit);
+		wit = walls.erase(wit);
+	}
+	for(ait=aliens.begin();ait!=aliens.end();ait++){
+		delete(*ait);
+		ait = aliens.erase(ait);
+	}
+	delete &ms;
+	cls();
+	if(totalScore == score){
+		win_animation();
+	}
+	else{
+		death_animation();
+	}
+	gotoxy(0,0); 
 	return 0;
 }
 
@@ -299,5 +326,15 @@ void cls(void){
 		}
 	}
 	gotoxy(0,0);
+	return;
+}
+void win_animation(void){
+	gotoxy(37,12);printf("You Won");
+	Sleep(2000);
+	return;
+}
+void death_animation(void){
+	gotoxy(36,12);printf("You lost");
+	Sleep(2000);
 	return;
 }

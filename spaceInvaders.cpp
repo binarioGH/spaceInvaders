@@ -90,6 +90,44 @@ bool Wall::inHitBox(int X, int Y){
 	return false;
 }
 
+class Alien{
+private:
+	int counter = 0;
+	int direction = 1;
+public:
+	int x,y;
+	int delay;
+	Alien(int _x, int _y, int d){
+		x = _x;
+		y = _y;
+		delay = d;
+	}
+	~Alien(void){
+		gotoxy(x,y);printf("*");
+		Sleep(100);
+		gotoxy(x,y);printf(" ");
+	}
+	void move(void);
+	bool shooting = false;
+	bool death = false;
+};
+void Alien::move(void){
+	gotoxy(x,y);printf(" ");
+	if(delay <= counter){
+		if(x <= 1 || x >= 79){
+			direction *= -1;
+			y += 1;
+		}
+        x += direction;
+        counter = 0;
+	}
+	else{
+		counter++;
+	}
+	gotoxy(x,y);printf("%c", 31);
+	return;
+}
+
 class Ship{
 private:
 	
@@ -126,7 +164,7 @@ void Ship::keyMove(void){
 
 void Ship::move(int key){
 	gotoxy(x,y);printf(" ");
-	if(delay == count){
+	if(delay <= count){
 		switch(key){
 			case 97:x--;break;
 			case 100:x++;break;
@@ -152,6 +190,14 @@ int main(){
 	list<Bullet*>::iterator bit;
 	list<Wall*> walls;
 	list<Wall*>::iterator wit;
+	list<Alien*> aliens;
+	list<Alien*>::iterator ait;
+	int i = 0;
+	int y = 4;
+	for(i=16;i<80;i+=16){
+		aliens.push_back(new Alien(i,y,1));
+		y += 1;
+	}
 	walls.push_back(new Wall(20, 19));
 	walls.push_back(new Wall(40, 19));
 	walls.push_back(new Wall(60, 19));
@@ -160,11 +206,36 @@ int main(){
 	while(ms.alive){
 		ms.keyMove();
 		if(ms.shooting){
-			bullets.push_back(new Bullet(ms.x, ms.y-2, -1,0,0));
+			bullets.push_back(new Bullet(ms.x, ms.y-1, -1,0,0));
 			ms.shooting = false;
+		}
+		for(ait=aliens.begin();ait!=aliens.end();ait++){
+			(*ait)->move();
+			if((*ait)->x == ms.x){
+				bullets.push_back(new Bullet((*ait)->x,(*ait)->y+1,1,0,0));
+			}
+			for(bit=bullets.begin();bit!=bullets.end();bit++){
+				if((*bit)->x == (*ait)->x && (*bit)->y == (*ait)->y){
+					(*bit)->death = true;
+					(*ait)->death = true;
+					break;
+				}
+			}
+			if((*ait)->y == 20){
+				ms.alive = false;
+			}
+			if((*ait)->death){
+				score += 50;	
+				delete(*ait);
+				ait = aliens.erase(ait);
+			}
 		}
 		for(bit=bullets.begin();bit!=bullets.end();bit++){
 			(*bit)->move();
+			if((*bit)->x == ms.x && (*bit)->y == ms.y){
+				ms.alive = false;
+				break;
+			}
 			for(wit=walls.begin();wit!=walls.end();wit++){
 				if(witdone){
 					witdone=false;

@@ -10,6 +10,9 @@ void draw_line(void);
 void gotoxy(int x, int y);
 void hideCursor(void);
 void cls(void);
+int play(int nAliens);
+void draw_underline(int bx, int tx);
+void clean_underline(void);
 
 class Bullet{
 private:
@@ -182,8 +185,50 @@ void Ship::move(int key){
 	return;
 } 
 
-int main(){
+int main(int nArgs, char* argv[]){
+	cls();
 	hideCursor(); 
+	draw_line();
+	int totalScore = 0;
+	int des = 0;
+	bool brk = false;//brk == break;
+	char key;
+	int helper =des;
+	gotoxy(8,11);printf("EASY   MODE");
+	gotoxy(26,11);printf("NORMAL  MODE");
+	gotoxy(46,11);printf("HARD   MODE");
+	gotoxy(66,11);printf("EXIT GAME");
+	while(!brk){
+		gotoxy(0,0);printf("Total Score: %i   ", totalScore);
+		if(kbhit()){
+			key = getch();
+			switch(key){
+				case 100:des += 1;break;
+				case  97:des -= 1;break; 
+			}
+			if(des <= -1){
+				des = 3;
+			}
+			else if(des >= 4){
+				des = 0;
+			}
+		}
+		switch(des){
+			case 0:draw_underline(8,19);break;
+			case 1:draw_underline(26,38);break;
+			case 2:draw_underline(46,57);break;
+			case 3:draw_underline(66,75);break;
+		}
+		if(des != helper){
+			helper = des;
+			clean_underline();
+		}
+	}
+	return 0;
+}
+
+
+int play(int nAliens){
 	cls();
 	gotoxy(0,0);
 	draw_line();
@@ -197,7 +242,7 @@ int main(){
 	int i = 0;
 	int y = 4;
 	int c = 0;
-	for(i=16;i<80;i+=16){
+	for(i=nAliens;i<80;i+=nAliens){
 		aliens.push_back(new Alien(i,y,1));
 		y += 1;
 		c++;//c++, haha
@@ -226,8 +271,9 @@ int main(){
 					break;
 				}
 			}
-			if((*ait)->y == 20){
+			if((*ait)->y == 19){
 				ms.alive = false;
+				break;
 			}
 			if((*ait)->death){
 				score += 50;	
@@ -280,12 +326,13 @@ int main(){
 	cls();
 	if(totalScore == score){
 		win_animation();
+		return score;
 	}
 	else{
 		death_animation();
+		return 0;
 	}
 	gotoxy(0,0); 
-	return 0;
 }
 
 void gotoxy(int x, int y){
@@ -336,5 +383,20 @@ void win_animation(void){
 void death_animation(void){
 	gotoxy(36,12);printf("You lost");
 	Sleep(2000);
+	return;
+}
+void draw_underline(int bx,int tx){
+	int draw;
+	for(draw=bx;draw<tx;draw++){
+		gotoxy(draw,12);printf("-");
+	}
+	return;
+}
+
+void clean_underline(void){
+	int cleanerX = 0;
+	for(cleanerX;cleanerX<80;cleanerX++){
+		gotoxy(cleanerX, 12);printf(" ");
+	}
 	return;
 }

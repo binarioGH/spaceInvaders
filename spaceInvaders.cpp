@@ -194,17 +194,27 @@ int main(int nArgs, char* argv[]){
 	bool brk = false;//brk == break;
 	char key;
 	int helper =des;
-	gotoxy(8,11);printf("EASY   MODE");
-	gotoxy(26,11);printf("NORMAL  MODE");
-	gotoxy(46,11);printf("HARD   MODE");
-	gotoxy(66,11);printf("EXIT GAME");
+	int difficulty = 0;
+	
 	while(!brk){
+		gotoxy(8,11);printf("EASY   MODE");
+	    gotoxy(26,11);printf("NORMAL  MODE");
+	    gotoxy(46,11);printf("HARD   MODE");
+	    gotoxy(66,11);printf("EXIT GAME");
 		gotoxy(0,0);printf("Total Score: %i   ", totalScore);
 		if(kbhit()){
 			key = getch();
 			switch(key){
 				case 100:des += 1;break;
-				case  97:des -= 1;break; 
+				case  97:des -= 1;break;
+				case 13:
+				    if(difficulty == -1){
+				    	brk=true;
+				    }
+				    else{
+				    	totalScore += play(difficulty);
+				    }
+				;break;
 			}
 			if(des <= -1){
 				des = 3;
@@ -214,10 +224,10 @@ int main(int nArgs, char* argv[]){
 			}
 		}
 		switch(des){
-			case 0:draw_underline(8,19);break;
-			case 1:draw_underline(26,38);break;
-			case 2:draw_underline(46,57);break;
-			case 3:draw_underline(66,75);break;
+			case 0:draw_underline(8,19);difficulty=16;break;
+			case 1:draw_underline(26,38);difficulty=10;break;
+			case 2:draw_underline(46,57);difficulty=8;break;
+			case 3:draw_underline(66,75);difficulty=-1;break;
 		}
 		if(des != helper){
 			helper = des;

@@ -14,6 +14,42 @@ int play(int nAliens);
 void draw_underline(int bx, int tx);
 void clean_underline(void);
 
+class Box{
+private:
+	void collition(void);
+public: 
+	int x, y;
+	bool moving = true;
+	Box(int _x, int _y){
+		x = _x;
+		y = _y;
+	}
+	~Box(void){
+		gotoxy(x,y);
+		printf("*");
+		Sleep(100);
+		gotoxy(x,y);
+		printf(" ");
+	}
+	void move(void);
+};
+void Box::move(void){
+	if(!moving){
+		return;
+	}
+	gotoxy(x,y);printf(" ");
+	y++;
+	collition();
+	gotoxy(x,y);printf("%c",220);
+	return;
+}
+void Box::collition(void){
+	if(y == 22){
+		moving = false;
+	}
+	return;
+}
+
 class Bullet{
 private:
 	int xd, yd;
@@ -139,6 +175,7 @@ private:
 	void collition(void);
 public:
 	int delay, count = 0;
+	int bullets = 10;
 	int x, y;
 	Ship(int _x, int _y, int d){
 		x = _x;
@@ -243,18 +280,28 @@ int play(int nAliens){
 	gotoxy(0,0);
 	draw_line();
 	Ship ms (40, 22, 0); //ms means my ship.
+	list<Box*> boxes;
+	list<Box*>::iterator bbit; //bullet box iterator;
 	list<Bullet*> bullets;
-	list<Bullet*>::iterator bit;
+	list<Bullet*>::iterator bit; //bullet iterator
 	list<Wall*> walls;
-	list<Wall*>::iterator wit;
+	list<Wall*>::iterator wit; // wall iterator
 	list<Alien*> aliens;
-	list<Alien*>::iterator ait;
+	list<Alien*>::iterator ait; // alien iterator
 	int i = 0;
-	int y = 4;
 	int c = 0;
+	int speed = 0;
+	int boxDelay = nAliens * 10;
+	int bcounter = 0;
+	int boxXposition = rand()%81;
+	switch(nAliens){
+		case 4:speed=0;break;
+		case 8:speed=2;break;
+		case 16:speed=4;break;
+		default:speed=3;break;
+	}
 	for(i=nAliens;i<80;i+=nAliens){
-		aliens.push_back(new Alien(i,y,1));
-		y += 1;
+		aliens.push_back(new Alien(i,4,speed));
 		c++;//c++, haha
 	}
 	walls.push_back(new Wall(20, 19));
@@ -263,11 +310,16 @@ int play(int nAliens){
 	bool witdone = false;
 	int score = 0;
 	int totalScore = 50 * c;
+	gotoxy(0,24);printf("Bullets: %i   ", ms.bullets);
 	while(ms.alive && score != totalScore){
 		ms.keyMove();
 		if(ms.shooting){
-			bullets.push_back(new Bullet(ms.x, ms.y-1, -1,0,0));
-			ms.shooting = false;
+			if(ms.bullets > 0){
+			    bullets.push_back(new Bullet(ms.x, ms.y-1, -1,0,0));
+			    ms.shooting = false;
+			    ms.bullets -= 1;
+			}
+			gotoxy(0,24);printf("Bullets: %i   ", ms.bullets);
 		}
 		for(ait=aliens.begin();ait!=aliens.end();ait++){
 			(*ait)->move();
@@ -316,7 +368,27 @@ int play(int nAliens){
 				bit = bullets.erase(bit);
 			}
 		}
+		for(bbit=boxes.begin();bbit!=boxes.end();bbit++){
+			if((*bbit)->moving){
+				(*bbit)->move();
+			}
+			
+			if((*bbit)->x == ms.x && (*bbit)->y == ms.y){
+				ms.bullets += 5;
+				gotoxy(0,24);printf("Bullets: %i   ", ms.bullets);
+				delete(*bbit);
+				bbit = boxes.erase(bbit);
+			}
 
+		}
+		if(bcounter == boxDelay){
+			boxes.push_back(new Box(boxXposition, 4));
+			boxXposition = rand()%81;
+			bcounter = 0;
+		}
+		else{
+			bcounter++;
+		}
 		gotoxy(0,1);printf("Score: %i   ", score);
 		Sleep(100);
 	}
@@ -333,7 +405,6 @@ int play(int nAliens){
 		ait = aliens.erase(ait);
 	}
 	delete &ms;
-	cls();
 	if(totalScore == score){
 		win_animation();
 		return score;
@@ -342,7 +413,6 @@ int play(int nAliens){
 		death_animation();
 		return 0;
 	}
-	gotoxy(0,0); 
 }
 
 void gotoxy(int x, int y){
@@ -388,11 +458,13 @@ void cls(void){
 void win_animation(void){
 	gotoxy(37,12);printf("You Won");
 	Sleep(2000);
+	cls();
 	return;
 }
 void death_animation(void){
 	gotoxy(36,12);printf("You lost");
 	Sleep(2000);
+	cls();
 	return;
 }
 void draw_underline(int bx,int tx){

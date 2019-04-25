@@ -11,6 +11,7 @@ void gotoxy(int x, int y);
 void hideCursor(void);
 void cls(void);
 int play(int nAliens);
+int horde(void);
 void draw_underline(int bx, int tx);
 void clean_underline(void);
 
@@ -235,7 +236,7 @@ int main(int nArgs, char* argv[]){
 	
 	while(!brk){
 		gotoxy(8,11);printf("EASY   MODE");
-	    gotoxy(26,11);printf("NORMAL  MODE");
+	    gotoxy(26,11);printf("HORDE   MODE");
 	    gotoxy(46,11);printf("HARD   MODE");
 	    gotoxy(66,11);printf("EXIT GAME");
 		gotoxy(0,0);printf("Total Score: %i   ", totalScore);
@@ -247,6 +248,9 @@ int main(int nArgs, char* argv[]){
 				case 13:
 				    if(difficulty == -1){
 				    	brk=true;
+				    }
+				    else if(difficulty == -2){
+				    	totalScore += horde();
 				    }
 				    else{
 				    	totalScore += play(difficulty);
@@ -262,7 +266,7 @@ int main(int nArgs, char* argv[]){
 		}
 		switch(des){
 			case 0:draw_underline(8,19);difficulty=16;break;
-			case 1:draw_underline(26,38);difficulty=10;break;
+			case 1:draw_underline(26,38);difficulty=-2;break;
 			case 2:draw_underline(46,57);difficulty=8;break;
 			case 3:draw_underline(66,75);difficulty=-1;break;
 		}
@@ -414,6 +418,85 @@ int play(int nAliens){
 		return 0;
 	}
 }
+
+int horde(void){
+	cls();
+	draw_line();
+	Ship ms (40, 22, 0);
+	int score=0;
+	list<Alien*> aliens;
+	list<Alien*>::iterator ait;
+	list<Bullet*> bullets;
+	list<Bullet*>::iterator bit;
+	int top = 500;
+	int HordeCounter = top;
+	int i;
+	int aliensSpeed = 5;
+	int speedCounter = 10;
+	int shootingCoolDown = 3;
+	int shootingCounter = 3;
+	while(ms.alive){
+		shootingCounter += 1;
+		HordeCounter += 1;
+		gotoxy(0,0);printf("Score: %i", score);
+		ms.keyMove();
+		if(ms.shooting){
+			if(shootingCoolDown <= shootingCounter){
+				bullets.push_back(new Bullet(ms.x, ms.y-1, -1,0,0));
+				shootingCounter = 0;
+			}
+			ms.shooting = false;
+		}
+		if(HordeCounter >= top){
+			for(i=8;i<80;i+=8){
+				aliens.push_back(new Alien(i, 4, aliensSpeed));
+			}
+			HordeCounter = 0;
+			top -= 1;
+			speedCounter -= 1;
+			if(speedCounter <= 0){
+				speedCounter = 10;
+				if(aliensSpeed > 0){
+					aliensSpeed -= 1;
+				}
+			}
+		}
+		
+		for(ait=aliens.begin();ait!=aliens.end();ait++){
+			(*ait)->move();
+			if((*ait)->y == 20){
+				ms.alive = false;
+			}
+			if((*ait)->x == ms.x){
+				bullets.push_back(new Bullet((*ait)->x,(*ait)->y+1,1,0,0));
+			}
+			for(bit=bullets.begin();bit!=bullets.end();bit++){
+				if((*bit)->x == (*ait)->x && (*bit)->y == (*ait)->y){
+					delete(*bit);
+					bit = bullets.erase(bit);
+					delete(*ait);
+					ait = aliens.erase(ait);
+					score += 50;
+					break;
+				}
+			}
+		}
+		for(bit=bullets.begin();bit!=bullets.end();bit++){
+			(*bit)->move();
+			if((*bit)->x == ms.x && (*bit)->y == ms.y){
+				ms.alive = false;
+			}
+			if((*bit)->death){
+				delete (*bit);
+				bit = bullets.erase(bit);
+			}
+		}
+		Sleep(100);
+	}
+	cls();
+	return score;
+}
+
 
 void gotoxy(int x, int y){
 	HANDLE hCon;
